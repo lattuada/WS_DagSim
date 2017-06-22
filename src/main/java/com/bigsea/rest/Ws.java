@@ -11,9 +11,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.FileFilter;
-
-
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.io.File;
+
+
 
 
 /*
@@ -117,28 +119,25 @@ public class Ws extends Utilities {
   }
 	
 	/*
-	 * 	             STUDENT'S TOOL (ALL PARAMETERS)
+	 * 	             OPT_IC
 	 */
 	
 	@GET
-	@Path("/resopt/{value1}/{value2}/{value3}/{value4}/{value5}/{value6}/{value7}")
+	@Path("/resopt/{value1}/{value2}/{value3}")
 	@Produces(MediaType.TEXT_HTML)
 	public Response Resopt(
-			@PathParam("value1")  String nNodes, 
-            @PathParam("value2")  String nCores,
-            @PathParam("value3")  String dataset,
-            @PathParam("value4")  String method,
-            @PathParam("value5")  String appId,
-            @PathParam("value6")  String logfile,
-            @PathParam("value7")  String deadline) 
+            @PathParam("value1")  String appId,
+            @PathParam("value2")  String datasize,
+            @PathParam("value3")  String deadline) 
 	{
 			
 	String msg1;
 	String cmd1;
 	
-	if (readWsConfig("RESOPT_HOME") == null) msg1 = "Fatal error: RESOPT_HOME not defined in .demo.properties ";
+	if (readWsConfig("RESOPT_HOME") == null) msg1 = "Fatal error: RESOPT_HOME not defined in wsi_config.xml ";
 	
-	String path = readWsConfig("RESOPT_HOME") + "/" + nNodes + "_" + nCores + "_" + dataset + "_" + method +"/" + appId;
+	/*
+	String path = readWsConfig("RESOPT_HOME") + "/" + appId + "_" + datasize + "_" + deadline;
 	
 	File f = new File(path);
 	if (!f.exists())
@@ -159,20 +158,97 @@ public class Ws extends Utilities {
 		nCores = reply.substring(nNodes.length()+1, reply.length());
 	
 	}
+	*/
+	String[] splited = null;
+	Connection connection = null;
+	ResultSet resultSet = null;
+	String sqlStatement = null;
+	String result = null;
 	
-	cmd1 = "cd " + readWsConfig("RESOPT_HOME")+";./script.sh " + nNodes + " " + nCores + " " + dataset + " " + method + 
-			" " + appId + " " + logfile + " " + deadline;  
-	msg1 = _run(cmd1);
+	try
+	{
+		connection = readDataBase(
+				readWsConfig("AppsPropDB_dbName"),
+				readWsConfig("AppsPropDB_IP"),
+				readWsConfig("AppsPropDB_user"),
+				readWsConfig("AppsPropDB_pass")
+				);
+		
+		connection.setAutoCommit(false);
+		 sqlStatement = "select num_vm_opt, num_cores_opt from " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
+				"where application_id='" +  appId + "'" +
+				" and dataset_size=" + datasize +
+				" and deadline=" + deadline;
+		
+		resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);		
+		if (resultSet.isFirst())
+		{
+			return Response.status(200).entity(writeResultSet(resultSet).split("\\s+")).build();
+		}
+		else
+		{
+			/* Find all the record matching app_id, datasize */
+			/* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
+			sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
+							"WHERE application_id="+"'" + appId + "'" +
+							" AND dataset_size=" + datasize + " ORDER BY ABS(" + deadline + " - deadline) limit 2";
+			
+			resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
+			
+			int[] num_cores_opt = new int[2];
+			int[] num_vm_opt = new int[2];
+			double[] deadlines = new double[2];
+			int index = 0;
+		
+			
+			while (resultSet.next())
+			{
+				deadlines[index] = resultSet.getDouble("deadline");
+				num_cores_opt[index] = resultSet.getInt("num_cores_opt");
+				num_vm_opt[index] = resultSet.getInt("num_vm_opt");
+				index++;
+			}
+			
+			
+			
+			result = String.valueOf(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_cores_opt)) +
+					" " + String.valueOf(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_vm_opt));
+			
+					
+			
+			/* Invoke OPT_IC */
+			cmd1 = "cd " + readWsConfig("RESOPT_HOME")+";./script.sh " + 
+			" " + appId + " " + datasize + " " + deadline;  
+			msg1 = _run(cmd1);
+			
+			/* Write on DB the new solution */
+			splited = msg1.split("\\s+");
+			
+			sqlStatement = "insert into " + readWsConfig("AppsPropDB_dbName") +
+					".OPTIMIZER_CONFIGURATION_TABLE(application_id, dataset_size, deadline, num_cores_opt, num_vm_opt) values (" +
+					"'" + appId + "', " + datasize + "," + deadline + "," + splited[0] +"," + splited[1] + ")";
+			insert(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
+			connection.commit();
+						
+		}
+		
+		close(connection);
 	
-	
-	 
-    return Response.status(200).entity(msg1).build();
+	}
+	catch(Exception e)
+	{
+		e.printStackTrace();
+	}
+
+    return Response.status(200).entity(result).build();
+	//return Response.status(200).entity(sqlStatement).build();
   }
 
+	
 	/*
 	 * 	             STUDENT'S TOOL (REDUCED PARAMETERS)
 	 */
-	
+	/*
 	@GET
 	@Path("/resoptR/{value1}/{value2}/{value3}/{value4}/{value5}/{value6}")
 	@Produces(MediaType.TEXT_HTML)
@@ -217,4 +293,5 @@ public class Ws extends Utilities {
 	 
 		return Response.status(200).entity(msg1).build();
   }
+  */
 }

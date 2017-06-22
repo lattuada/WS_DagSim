@@ -21,8 +21,115 @@ import java.io.FileNotFoundException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Utilities {
+	
+	
+    public ResultSet query(String dbName, Connection connect, String sqlStatement)
+    {
+    	ResultSet resultSet = null;
+    	try
+    	{
+    		Statement statement = connect.createStatement();
+
+    		resultSet = statement.executeQuery(sqlStatement);
+    		
+    	}
+    	catch(Exception e)
+    	{
+    		e.printStackTrace();
+    	}
+    	return resultSet; 
+    }
+    
+    public void insert(String dbName, Connection connect, String sqlStatement)
+    {
+    	
+    	try
+    	{
+    		Statement statement = connect.createStatement();
+
+    		statement.executeUpdate(sqlStatement);
+    		
+    	}
+    	catch(Exception e)
+    	{
+    		e.printStackTrace();
+    	}
+ 
+    }
+    
+    /* Temporary solution: avg not interpolation */
+    public double Interpolation(double x, double x1, double x2, int[] values)
+    {
+    	double res1;
+    	double res2;
+    	
+    	res1 = (x - x1)/(x2 - x1);
+    	res2 = values[1] - values[0];
+    	
+    	return values[0] + res1*res2;
+    }
+    
+   
+	public Connection readDataBase(String dbName, String Ip, String user, String password			
+			) throws Exception 
+	{
+		Connection connect = null;
+	 try 
+        {
+            // This will load the MySQL driver, each DB has its own driver
+            Class.forName("com.mysql.jdbc.Driver");
+            // Setup the connection with the DB
+            String conn_string = "jdbc:mysql://" + Ip +"/" + dbName + "?"
+                    + "user=" + user + "&password="+ password;
+            connect = DriverManager.getConnection(conn_string);             
+     
+            
+        } 
+        catch (Exception e) 
+        {
+            throw e;
+        } 
+        
+	 
+	 return connect;
+    }
+	
+	public String writeResultSet(ResultSet resultSet) throws SQLException {
+		String application_id = "";
+		String dataset_size = "";
+		String deadline = "";
+		
+        while (resultSet.next()) {
+
+            application_id = resultSet.getString("application_id");
+            dataset_size = resultSet.getString("dataset_size");
+            deadline = resultSet.getString("deadline");
+
+        }
+        return application_id +" " + dataset_size + " "+ deadline;
+    }
+	
+	
+	public void close(Connection connect) {
+        try {
+            
+
+            if (connect != null) {
+                connect.close();
+            }
+        } catch (Exception e) {
+
+        }
+    }
+	
 	public String bestMatchProduct(File[] directories, String nNodesnCores, String dataset_size, String param, String app_id)
 	{
 		int min = Integer.MAX_VALUE;
