@@ -85,7 +85,7 @@ public class Utilities {
 	 try 
         {
             // This will load the MySQL driver, each DB has its own driver
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             // Setup the connection with the DB
             String conn_string = "jdbc:mysql://" + Ip +"/" + dbName + "?"
                     + "user=" + user + "&password="+ password;

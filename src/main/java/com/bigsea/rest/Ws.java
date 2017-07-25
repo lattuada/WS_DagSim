@@ -43,12 +43,14 @@ public class Ws extends Utilities {
  		
 	String msg = "", dagsimPath, resultsPath;
 	dagsimPath = readWsConfig("DAGSIM_HOME");
+	
 	resultsPath = readWsConfig("RESULTS_HOME");
+	
 	String path = resultsPath + "/" + nNodes + "_" + nCores + "_" + dataset + "_" + method +"/" + appId;
 	
 	
-	if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in .demo.properties ";
-	if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in .demo.properties ";
+	if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ";
+	if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in wsi_config.xml ";
 	
 	File f = new File(path);
 	if (!f.exists())
@@ -93,8 +95,8 @@ public class Ws extends Utilities {
 	dagsimPath = readWsConfig("DAGSIM_HOME");
 	resultsPath = readWsConfig("RESULTS_HOME");
 	
-	if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in .demo.properties ";
-	if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in .demo.properties ";
+	if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ";
+	if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in wsi_cnfig.xml ";
 	
 	// Get the list of all the folders
 	    
@@ -176,8 +178,8 @@ public class Ws extends Utilities {
 		
 		connection.setAutoCommit(false);
 		 sqlStatement = "select num_vm_opt, num_cores_opt from " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
-				"where application_id='" +  appId + "'" +
-				" and dataset_size=" + datasize +
+				"where application_id='" +  appId   + "'" +
+				   " and dataset_size='" + datasize + "'" +
 				" and deadline=" + deadline;
 		
 		resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);		
@@ -191,7 +193,7 @@ public class Ws extends Utilities {
 			/* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
 			sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
 							"WHERE application_id="+"'" + appId + "'" +
-							" AND dataset_size=" + datasize + " ORDER BY ABS(" + deadline + " - deadline) limit 2";
+							" AND dataset_size='" + datasize + "' ORDER BY ABS(" + deadline + " - deadline) limit 2";
 			
 			resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
 			
@@ -226,7 +228,7 @@ public class Ws extends Utilities {
 			
 			sqlStatement = "insert into " + readWsConfig("AppsPropDB_dbName") +
 					".OPTIMIZER_CONFIGURATION_TABLE(application_id, dataset_size, deadline, num_cores_opt, num_vm_opt) values (" +
-					"'" + appId + "', " + datasize + "," + deadline + "," + splited[0] +"," + splited[1] + ")";
+					"'" + appId + "', '" + datasize + "'," + deadline + "," + splited[0] +"," + splited[1] + ")";
 			insert(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
 			connection.commit();
 						
