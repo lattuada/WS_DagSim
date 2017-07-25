@@ -65,6 +65,11 @@ public class Ws extends Utilities {
 	    }
 	    });
 		
+		 if (directories == null)	
+		    {
+		    	System.out.println("Fatal error: no sub-directories have been found in " + readWsConfig("RESULTS_HOME"));
+		    	System.exit(-1);
+		    }
 		String reply = bestMatch(directories, nNodes, nCores, dataset, method, appId);
 	
 		nNodes = reply.substring(0, reply.indexOf(" "));
