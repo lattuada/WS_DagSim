@@ -31,16 +31,17 @@
 			<version>1.8</version>
 		</dependency>
 
+                <dependency>
+                   <groupId>mysql</groupId>
+                   <artifactId>mysql-connector-java</artifactId>
+                   <version>6.0.6</version>
+                </dependency>
 
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>6.0.6</version>
-		</dependency>
+		
 	</dependencies>
 
 	<build>
-		<finalName>RESTful</finalName>
+		<finalName>bigsea</finalName>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
