@@ -192,11 +192,11 @@ public class Ws extends Utilities {
 		
 		
 		
-		
+		/* Check if the desired configuration already exists in the DB */
 		if (resultSet.next())
 		{
 			
-			result = resultSet.getDouble("num_vm_opt") + " " + resultSet.getDouble("num_cores_opt");
+			result = resultSet.getDouble("num_cores_opt") + " "+ resultSet.getDouble("num_vm_opt");
 			return Response.status(200).entity(result).build();
 		}
 		else
