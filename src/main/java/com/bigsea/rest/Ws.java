@@ -126,7 +126,7 @@ public class Ws extends Utilities {
 	
 	@GET
 	@Path("/resopt/{value1}/{value2}/{value3}")
-	@Produces(MediaType.TEXT_HTML)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response Resopt(
             @PathParam("value1")  String appId,
             @PathParam("value2")  String datasize,
@@ -190,7 +190,9 @@ public class Ws extends Utilities {
 		
 		if (resultSet.next())
 		{
-			return Response.status(200).entity(writeResultSet(resultSet).split("\\s+")).build();
+			
+			result = resultSet.getDouble("num_vm_opt") + " " + resultSet.getDouble("num_cores_opt");
+			return Response.status(200).entity(result).build();
 		}
 		else
 		{
