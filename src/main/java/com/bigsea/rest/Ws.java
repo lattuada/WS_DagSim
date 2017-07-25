@@ -181,10 +181,14 @@ public class Ws extends Utilities {
 				"where application_id='" +  appId   + "'" +
 				   " and dataset_size='" + datasize + "'" +
 				" and deadline=" + deadline;
-		 System.out.println(sqlStatement);
+	
 		
-		resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);		
-		if (resultSet.isFirst())
+		resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
+		
+		
+		
+		
+		if (resultSet.next())
 		{
 			return Response.status(200).entity(writeResultSet(resultSet).split("\\s+")).build();
 		}
