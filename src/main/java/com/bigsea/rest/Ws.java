@@ -168,7 +168,8 @@ public class Ws extends Utilities {
 		createConfigAppFile(connection, appId, deadline);
                 
                 // Call OPT_IC in a synchronous way
-                result = callResopt(connection, appId, datasize, deadline, false);
+                //result = callResopt(connection, appId, datasize, deadline, false);
+		result = callResopt(connection, appId, datasize, deadline, true);
                 
 		close(connection);
 	}
@@ -520,7 +521,7 @@ public class Ws extends Utilities {
             else
             {
                 Future<String> future = executor.submit(new ResoptCallable(appId, datasize, deadline)); 
-                if (async) {
+                //if (async) {
                     /* Find all the record matching app_id, datasize */
                     /* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
                     sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
@@ -549,11 +550,11 @@ public class Ws extends Utilities {
                     int numVM = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_vm_opt));
 
                     result = String.valueOf(numCores) + " " + String.valueOf(numVM);
-                } 
-                else {
+                //} 
+                //else {
                     // Synchronous call
-                    result = future.get();
-                }
+                  //  result = future.get();
+                //}
             }
         }
         catch (Exception e) {
