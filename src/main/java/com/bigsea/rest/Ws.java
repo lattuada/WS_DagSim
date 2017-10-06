@@ -257,11 +257,19 @@ public class Ws extends Utilities {
                 // No previous run available, start dagsim
                 String dagsimOutput = StartDagsimStages(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, dataset, appId));
 
+                String[] stages = getAllStages(dagsimOutput);
+                boolean found = false;
+                for (String s : stages) {
+                    if (s.equals(stage))
+                        found = true;
+                }
+                if (found == false)
+                    return Response.status(200).entity("Stage " + stage + " does not exist").build();
+
                 remainingTime = getRemainingTime(dagsimOutput, stage);
                 stage_end_time = getStageWaitTime(dagsimOutput, stage);
                 
                 // Save the results in lookup table for all the stages
-                String[] stages = getAllStages(dagsimOutput);
                 for (String s : stages) {
                     saveLookupDagsimStages(connection, dbName, appId, totalNcores, s, dataset, getStageWaitTime(dagsimOutput, s), getRemainingTime(dagsimOutput, s));
                 }
