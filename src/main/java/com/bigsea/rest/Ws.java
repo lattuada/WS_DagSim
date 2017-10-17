@@ -190,29 +190,29 @@ public class Ws extends Utilities {
         
     
     @GET
-    @Path("/dagsim/{nNodes}/{nCores}/{ramGB}/{dataset}/{appSessId}/{stage}")
+    @Path("/dagsim/{nNodes}/{nCores}/{ramGB}/{dataset}/{appSessId}/{stage}/{currentTimeStamp}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response dagsimCallStages(
-                                        @PathParam("nNodes")  String nNodes, 
+                                        @PathParam("nNodes")  String nNodes,
                                         @PathParam("nCores")  String nCores,
                                         @PathParam("ramGB")  String ramGB,
                                         @PathParam("dataset")  String dataset,
                                         @PathParam("appSessId")  String appSessId,
-                                        @PathParam("stage")  String stage
-                                   ) {
+                                        @PathParam("stage")  String stage,
+                                        @PathParam("currentTimeStamp") String currentTimeStamp) {
         String dagsimPath = readWsConfig("DAGSIM_HOME");
-	String resultsPath = readWsConfig("RESULTS_HOME");
-	
+        String resultsPath = readWsConfig("RESULTS_HOME");
+
         if (dagsimPath == null)
             return Response.status(500)
                     .entity("Fatal error: DAGSIM_HOME not defined in wsi_config.xml ")
                     .build();
-            
-	if (resultsPath == null) 
+
+        if (resultsPath == null)
             return Response.status(500)
                     .entity("Fatal error: RESULTS_HOME not defined in wsi_config.xml ")
                     .build();
-        
+
         // try connection with database first to retrieve application_id and submission time
         String dbName = readWsConfig("AppsPropDB_dbName");
         
@@ -268,7 +268,7 @@ public class Ws extends Utilities {
 
                 remainingTime = getRemainingTime(dagsimOutput, stage);
                 stage_end_time = getStageWaitTime(dagsimOutput, stage);
-                
+
                 // Save the results in lookup table for all the stages
                 for (String s : stages) {
                     saveLookupDagsimStages(connection, dbName, appId, totalNcores, s, dataset, getStageWaitTime(dagsimOutput, s), getRemainingTime(dagsimOutput, s));
@@ -278,12 +278,12 @@ public class Ws extends Utilities {
                 stage_end_time = (long)(lookup_stage_end_time.getDouble("val"));
                 remainingTime = (long)(lookup_remaining_time.getDouble("val"));
             }
-            
-            Timestamp now = new Timestamp(System.currentTimeMillis());
+
+            Timestamp now = new Timestamp(Long.parseLong(currentTimeStamp));
             long elapsedTime = now.getTime() - submissionTime.getTime();
-            
+
             long rescaledRemainingTime = Math.round(remainingTime * (float)elapsedTime / stage_end_time);
-            
+
             return Response.status(200).entity(remainingTime + " " + rescaledRemainingTime).build();            
         }
         catch (Exception e) {
@@ -291,35 +291,34 @@ public class Ws extends Utilities {
             return Response.status(500).build();
         }
     }
-    
-    
+
     /*
      *                  RESOPT WITH STAGES
      */
-	
+
     @GET
-    @Path("/resopt/{appSessId}/{datasize}/{deadline}/{stage}")
+    @Path("/resopt/{appSessId}/{datasize}/{deadline}/{stage}/{currentTimeStamp}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response ResoptStages(
-        @PathParam("appSessId") String appSessId,
-        @PathParam("datasize")  String datasize,
-        @PathParam("deadline")  String deadline,
-        @PathParam("stage")     String stage) 
-    {
-        
+        @PathParam("appSessId")        String appSessId,
+        @PathParam("datasize")         String datasize,
+        @PathParam("deadline")         String deadline,
+        @PathParam("stage")            String stage,
+        @PathParam("currentTimeStamp") String currentTimeStamp)
+        {
+
         String resoptHome = readWsConfig("RESOPT_HOME");
         if (resoptHome == null) {
             return Response.status(500).entity("Fatal error: RESOPT_HOME not defined in wsi_config.xml").build();
         }
-	
-	
-	Connection connection = null;
-	String result = "";
-	
+
+
+        Connection connection = null;
+        String result = "";
+
         String appId;
         Timestamp submissionTime;
-	try
-	{
+        try {
             connection = readDataBase(
                             readWsConfig("AppsPropDB_dbName"),
                             readWsConfig("AppsPropDB_IP"),
@@ -335,7 +334,7 @@ public class Ws extends Utilities {
 
             long stageEndTime = getStageEndTimeRunningJob(connection, dbName, appSessId, datasize, stage);
 
-            Timestamp now = new Timestamp(System.currentTimeMillis());
+            Timestamp now = new Timestamp(Long.parseLong(currentTimeStamp));
             long elapsedTime = now.getTime() - submissionTime.getTime();
 
 
@@ -345,13 +344,13 @@ public class Ws extends Utilities {
                 return Response.status(200).entity("Deadline too strict").build();
 
             rescaledDeadline = roundToThousands(rescaledDeadline);
-            
+
             // Call OPT_IC with the rescaled deadline asynchronously
             result = callResopt(connection, appId, datasize, String.valueOf(rescaledDeadline), true);
 
             int newNumCores = Integer.parseInt(result.split(" ")[0]);
             int newNumVM = Integer.parseInt(result.split(" ")[1]);
-            
+
             if (newNumCores <= 0 || newNumVM <= 0) {
                 // If the interpolation result is non positive, then return the current number of cores
                 int nCoresRunning = Integer.parseInt(retrieveNcoresRunningJob(connection, dbName, appSessId));
