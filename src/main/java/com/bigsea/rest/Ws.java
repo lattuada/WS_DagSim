@@ -167,9 +167,7 @@ public class Ws extends Utilities {
 		// Create ConfigApp.txt	
 		createConfigAppFile(connection, appId, deadline);
                 
-                // Call OPT_IC in a synchronous way
-                //result = callResopt(connection, appId, datasize, deadline, false);
-		result = callResopt(connection, appId, datasize, deadline, true);
+		result = callResopt(connection, appId, datasize, deadline);
                 
 		close(connection);
 	}
@@ -346,7 +344,7 @@ public class Ws extends Utilities {
             rescaledDeadline = roundToThousands(rescaledDeadline);
 
             // Call OPT_IC with the rescaled deadline asynchronously
-            result = callResopt(connection, appId, datasize, String.valueOf(rescaledDeadline), true);
+            result = callResopt(connection, appId, datasize, String.valueOf(rescaledDeadline));
 
             int newNumCores = Integer.parseInt(result.split(" ")[0]);
             int newNumVM = Integer.parseInt(result.split(" ")[1]);
@@ -509,7 +507,7 @@ public class Ws extends Utilities {
      * @param deadline
      * @return A space-separated string of type "<num_cores_opt> <num_vm_opt>" containing the result of resopt.
      */
-    public String callResopt(Connection connection, String appId, String datasize, String deadline, boolean async) {
+    public String callResopt(Connection connection, String appId, String datasize, String deadline) {
         String sqlStatement = "select num_vm_opt, num_cores_opt from " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
                         "where application_id='" +  appId   + "'" +
                            " and dataset_size='" + datasize + "'" +
@@ -527,41 +525,35 @@ public class Ws extends Utilities {
             }
             else
             {
-                Future<String> future = executor.submit(new ResoptCallable(appId, datasize, deadline)); 
-                //if (async) {
-                    /* Find all the record matching app_id, datasize */
-                    /* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
-                    sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
-                                                    "WHERE application_id="+"'" + appId + "'" +
-                                                    " AND dataset_size='" + datasize + "'"+
-                                                    " AND num_cores_opt <> '0' " + "ORDER BY ABS(" + deadline + " - deadline) limit 2";
+                Future<String> future = executor.submit(new ResoptCallable(appId, datasize, deadline));
+                /* Find all the record matching app_id, datasize */
+                /* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
+                sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
+                   "WHERE application_id="+"'" + appId + "'" +
+                   " AND dataset_size='" + datasize + "'"+
+                   " AND num_cores_opt <> '0' " + "ORDER BY ABS(" + deadline + " - deadline) limit 2";
 
-                    resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
+                resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
 
-                    int[] num_cores_opt = new int[2];
-                    int[] num_vm_opt = new int[2];
-                    double[] deadlines = new double[2];
-                    int index = 0;
-
-
-                    while (resultSet.next())
-                    {
-                            deadlines[index] = resultSet.getDouble("deadline");
-                            num_cores_opt[index] = resultSet.getInt("num_cores_opt");
-                            num_vm_opt[index] = resultSet.getInt("num_vm_opt");
-                            index++;
-                    }
+                int[] num_cores_opt = new int[2];
+                int[] num_vm_opt = new int[2];
+                double[] deadlines = new double[2];
+                int index = 0;
 
 
-                    int numCores = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_cores_opt));
-                    int numVM = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_vm_opt));
+                while (resultSet.next())
+                {
+                   deadlines[index] = resultSet.getDouble("deadline");
+                   num_cores_opt[index] = resultSet.getInt("num_cores_opt");
+                   num_vm_opt[index] = resultSet.getInt("num_vm_opt");
+                   index++;
+                }
 
-                    result = String.valueOf(numCores) + " " + String.valueOf(numVM);
-                //} 
-                //else {
-                    // Synchronous call
-                  //  result = future.get();
-                //}
+
+                int numCores = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_cores_opt));
+                int numVM = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_vm_opt));
+
+                result = String.valueOf(numCores) + " " + String.valueOf(numVM);
             }
         }
         catch (Exception e) {
