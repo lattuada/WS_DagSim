@@ -677,31 +677,21 @@ public class Utilities {
      * @return A ResultSet containing 'stage_end_time' and 'remaining_time' if results are precomputed. Null otherwise
      * @throws SQLException 
      */
-    
+
     public ResultSet lookupDagsimStageEndTime(Connection connection, String dbName, String appId, String nCores, String stage, String dataset) throws SQLException {
         String query = "SELECT val FROM " + dbName + ".PREDICTOR_CACHE_TABLE WHERE is_residual = FALSE AND application_id = '" + appId + "' AND num_cores = " + nCores + " AND stage='" + stage + "' AND dataset_size=" + dataset;
-        
+
         ResultSet results = query(dbName, connection, query);
-        if (results != null && results.next()) {
-            return results;
-        }
-        else {
-            return null;
-        }
+        return results;
     }
-    
+
     public ResultSet lookupDagsimStageRemainingTime(Connection connection, String dbName, String appId, String nCores, String stage, String dataset) throws SQLException {
         String query = "SELECT val FROM " + dbName + ".PREDICTOR_CACHE_TABLE WHERE is_residual = TRUE AND application_id = '" + appId + "' AND num_cores = " + nCores + " AND stage='" + stage + "' AND dataset_size=" + dataset;
-        
+
         ResultSet results = query(dbName, connection, query);
-        if (results != null && results.next()) {
-            return results;
-        }
-        else {
-            return null;
-        }
+        return results;
     }
-    
+
     /**
      * Saves the results in the lookup table
      * @param connection
