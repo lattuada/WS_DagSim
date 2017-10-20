@@ -66,13 +66,13 @@ public class Ws extends Utilities {
 
          File [] directories = new File(readWsConfig("RESULTS_HOME")).listFiles(new FileFilter() {
             @Override
-            public boolean accept(File file) 
+            public boolean accept(File file)
             {
                return file.isDirectory();
             }
          });
 
-         if (directories == null)	
+         if (directories == null)
          {
             System.out.println("Fatal error: no sub-directories have been found in " + readWsConfig("RESULTS_HOME"));
             System.exit(-1);
@@ -93,7 +93,13 @@ public class Ws extends Utilities {
                );
          connection.setAutoCommit(false);
          String dbName = readWsConfig("AppsPropDB_dbName");
-         msg = Start(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNcores, datasetSize);
+         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
+         if (lookup_total_time == null || !lookup_total_time.next()) {
+            msg = Start(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNcores, datasetSize);
+         }
+         else {
+            msg = String.valueOf((long)(lookup_total_time.getDouble("val")));
+         }
       }
       catch (Exception e) {
          e.printStackTrace();

@@ -307,17 +307,16 @@ public class Utilities {
 
 
 
-   public String Start(String path, String luafilename, Connection connection, String dbName, String appId, String nCores, String datasize) throws Exception{
+   public String Start(String path, String luafilename, Connection connection, String dbName, String appId, String nCores, String datasetSize) throws Exception{
       String output;
 
-      output = StartDagsimStages(path, luafilename, connection, dbName, appId, nCores, datasize);
-      String row = output.split("\n")[0];
-      String result = "";
-      for(int index = 3; index <= 7; index++) {
-         if(result != "")
-            result += " ";
-         result += extract(row, index, "\t");
-      }
+      output = StartDagsimStages(path, luafilename, connection, dbName, appId, nCores, datasetSize);
+      String result = String.valueOf(getTotalExecutionTime(output));
+
+      String save_whole_time = "REPLACE INTO " + dbName + ".PREDICTOR_CACHE_TABLE(application_id, num_cores, stage, dataset_size, val, is_residual) VALUES ('" + appId + "', " + nCores + ", '" + "0" + "', " + datasetSize + ", " + result + ", TRUE)";
+
+      insert(dbName, connection, save_whole_time);
+      connection.commit();
       return result;
    }
 
@@ -329,7 +328,7 @@ public class Utilities {
     * @param luafilename path to the lua model description
     * @return The complete dagSim output
     */
-   public String StartDagsimStages(String path, String luafilename, Connection connection, String dbName, String appId, String nCores, String datasize) throws SQLException {
+   public String StartDagsimStages(String path, String luafilename, Connection connection, String dbName, String appId, String nCores, String datasetSize) throws SQLException {
       String cmd = "cd " + path + ";./dagsim.sh " + luafilename + " -s 2>&1";
 
       String outputMsg = _run(cmd);
@@ -340,7 +339,7 @@ public class Utilities {
          // Save the results in lookup table for all the stages
          String[] stages = getAllStages(outputMsg);
          for (String s : stages) {
-            saveLookupDagsimStages(connection, dbName, appId, nCores, s, datasize, getStageWaitTime(outputMsg, s), getRemainingTime(outputMsg, s));
+            saveLookupDagsimStages(connection, dbName, appId, nCores, s, datasetSize, getStageWaitTime(outputMsg, s), getRemainingTime(outputMsg, s));
          }
          return outputMsg;
       }
@@ -378,7 +377,7 @@ public class Utilities {
     * @param currentStage
     * @return estimated remaining time
     */
-   public long getRemainingTime(String dagsimOutput, String currentStage) {            
+   public long getRemainingTime(String dagsimOutput, String currentStage) {
       long totalTime = getTotalExecutionTime(dagsimOutput);
       long stageWaitTime = getStageWaitTime(dagsimOutput, currentStage);
 
@@ -392,7 +391,7 @@ public class Utilities {
     * @return 
     */
    public long getTotalExecutionTime(String dagsimOutput) {
-      return (long)Math.floor(Double.valueOf(extract(dagsimOutput.split("\n")[2], 3, "\t")));
+      return (long)Math.floor(Double.valueOf(extract(dagsimOutput.split("\n")[0], 3, "\t")));
    }
 
    /**
@@ -480,13 +479,13 @@ public class Utilities {
       return(luaFileName);
    }
 
-   public String BuildLUAWithoutMethod(String resultsPath, final String nNodes, final String nCores, final String datasize, String query) {
+   public String BuildLUAWithoutMethod(String resultsPath, final String nNodes, final String nCores, final String datasetSize, String query) {
       // List all files in results path directory
       File [] directories = new File(resultsPath).listFiles(new FileFilter() {
          @Override
          public boolean accept(File file) 
          {
-            return file.isDirectory() && file.getName().startsWith(nNodes + "_" + nCores) && file.getName().endsWith(datasize);
+            return file.isDirectory() && file.getName().startsWith(nNodes + "_" + nCores) && file.getName().endsWith(datasetSize);
          }
       });
       if (directories.length > 0) {
