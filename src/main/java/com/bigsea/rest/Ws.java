@@ -367,6 +367,7 @@ public class Ws extends Utilities {
 
 
                long rescaledDeadline = Math.round((Long.parseLong(deadline)) * ((float) stageEndTime / elapsedTime));
+               System.out.println("rescaledDeadline: " + rescaledDeadline + " = " + deadline + " * (" + stageEndTime + " / " + elapsedTime + ")");
 
                if (elapsedTime >= Long.parseLong(deadline) || resoptCallInvalid(connection, dbName, appId, datasetSize, rescaledDeadline))
                   return Response.status(200).entity("Deadline too strict").build();
