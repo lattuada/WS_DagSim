@@ -147,6 +147,7 @@ public class Ws extends Utilities {
 
       String newNodes = reply.substring(0, reply.indexOf(" "));
       String newCores = reply.substring(newNodes.length()+1, reply.length());
+      String totalNewNcores = String.valueOf(Integer.valueOf(newCores) * Integer.valueOf(newNodes));
       try {
          Connection connection = readDataBase(
                readWsConfig("AppsPropDB_dbName"),
@@ -367,12 +368,12 @@ public class Ws extends Utilities {
 
 
                long rescaledDeadline = Math.round((Long.parseLong(deadline)) * ((float) stageEndTime / elapsedTime));
-               System.out.println("rescaledDeadline: " + rescaledDeadline + " = " + deadline + " * (" + stageEndTime + " / " + elapsedTime + ")");
 
                if (elapsedTime >= Long.parseLong(deadline) || resoptCallInvalid(connection, dbName, appId, datasetSize, rescaledDeadline))
                   return Response.status(200).entity("Deadline too strict").build();
 
                rescaledDeadline = roundToThousands(rescaledDeadline);
+               System.out.println("rescaledDeadline: " + rescaledDeadline + " = " + deadline + " * (" + stageEndTime + " / " + elapsedTime + ")");
 
                // Call OPT_IC with the rescaled deadline asynchronously
                result = callResopt(connection, appId, datasetSize, String.valueOf(rescaledDeadline));
@@ -488,13 +489,14 @@ public class Ws extends Utilities {
          });
 
          String reply = bestMatchProduct(directories, nCoresRunning, datasetSize, "NA", appId);
-
+         System.out.println("bestMatchProduct of " + nCoresRunning + " is " + reply);
          String newNodes = reply.substring(0, reply.indexOf(" "));
          String newCores = reply.substring(newNodes.length()+1, reply.length());
 
          String luaPath = BuildLUAWithoutMethod(resultsPath, newNodes, newCores, datasetSize, appId);
+         String totalNewNcores = String.valueOf(Integer.valueOf(newNodes) * Integer.valueOf(newCores));
 
-         String dagsimOutput = StartDagsimStages(dagsimPath, luaPath, connection, dbName, appId, newCores, datasetSize);
+         String dagsimOutput = StartDagsimStages(dagsimPath, luaPath, connection, dbName, appId, totalNewNcores, datasetSize);
 
          long stage_end_time = getStageWaitTime(dagsimOutput, stage);
 
