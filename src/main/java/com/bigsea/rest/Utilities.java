@@ -510,9 +510,10 @@ public class Utilities {
       return(path);
    }
 
-   public String BuildLUA(String resultsPath, String iD, String dsDimension, String coreN, String memory, String query)
+   // BuildLUA(                  resultsPath,        newNodes,       newCores,            ramGB,     datasetSize, appId)
+   public String BuildLUA(String resultsPath, String newNodes, String newCores, String ramGB, String datasetSize, String appId)
    {
-      String path = resultsPath.concat("/").concat(iD).concat("_").concat(dsDimension).concat("_").concat(coreN).concat("_").concat(memory).concat("/").concat(query).concat("/logs/");
+      String path = resultsPath.concat("/").concat(newNodes).concat("_").concat(newCores).concat("_").concat(ramGB).concat("_").concat(datasetSize).concat("/").concat(appId).concat("/logs/");
 
       String luaFileName = getFirstFile(getFirstFolder(path));
 
@@ -555,7 +556,7 @@ public class Utilities {
       catch(Exception e)
       {
          e.printStackTrace();
-
+         System.exit(-1);
       }
 
       return folderName.concat("/");

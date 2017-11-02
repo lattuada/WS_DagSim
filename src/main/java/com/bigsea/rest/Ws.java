@@ -133,8 +133,8 @@ public class Ws extends Utilities {
    @Produces(MediaType.TEXT_HTML)
    public Response dagsimExtendedCall(
          @PathParam("value1")  String nNodesnCores,
-         @PathParam("value2")  String datasetSize,
-         @PathParam("value3")  String ramGB,
+         @PathParam("value2")  String ramGB,
+         @PathParam("value3")  String datasetSize,
          @PathParam("value4")  String appId
          ) {
 
@@ -239,13 +239,13 @@ public class Ws extends Utilities {
 
 
    @GET
-   @Path("/dagsim/{nNodes}/{nCores}/{datasetSize}/{ramGB}/{appSessId}/{stage}/{currentTimeStamp}")
+   @Path("/dagsim/{nNodes}/{nCores}/{ramGB}/{datasetSize}/{appSessId}/{stage}/{currentTimeStamp}")
    @Produces(MediaType.TEXT_PLAIN)
    public Response dagsimCallStages(
          @PathParam("nNodes")  String nNodes,
          @PathParam("nCores")  String nCores,
-         @PathParam("ramGB")  String datasetSize,
-         @PathParam("datasetSize")  String ramGB,
+         @PathParam("ramGB")  String ramGB,
+         @PathParam("datasetSize")  String datasetSize,
          @PathParam("appSessId")  String appSessId,
          @PathParam("stage")  String stage,
          @PathParam("currentTimeStamp") String currentTimeStamp) {
