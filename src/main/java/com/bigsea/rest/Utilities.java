@@ -1,21 +1,27 @@
+/*##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+*/
+
 package com.bigsea.rest;
 
 import java.io.*;
-
 import java.nio.charset.Charset;
 import java.util.Arrays;
-
-
-
 import java.io.FileNotFoundException;
-
-
 import java.util.Enumeration;
 import java.util.Properties;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -41,6 +47,40 @@ public class Utilities {
       return resultSet;
    }
 
+   /*
+    * checkConfigurationParameter
+    * 
+    * Check that the value of the variable in wsi_config.xml file has a value
+    */
+   public void checkConfigurationParameter(String variable, String msg)
+   {
+	   try
+	   {
+		   if (variable == null) throw new Exception(msg);
+	   }
+	   catch(Exception e)
+ 	  {
+ 		  e.printStackTrace();
+ 		  System.exit(-1);
+ 	  }
+   }
+   
+   /*
+    * checkFoldersExistence
+    * Check that the set of folders (data log) exists
+    */
+   public void checkFoldersExistence(File name[], String msg)
+   {
+	   try
+	   {
+		   if (name == null) throw new Exception(msg);
+	   }
+	   catch(Exception e)
+ 	  {
+ 		  e.printStackTrace();
+ 		  System.exit(-1);
+ 	  }
+   }
 
    public void createConfigAppFile(Connection connection, String appId, String deadline) throws RuntimeException
    {
@@ -470,9 +510,9 @@ public class Utilities {
       return(path);
    }
 
-   public String BuildLUA(String resultsPath, String iD, String dsDimension, String coreN, String method, String query)
+   public String BuildLUA(String resultsPath, String iD, String dsDimension, String coreN, String memory, String query)
    {
-      String path = resultsPath.concat("/").concat(iD).concat("_").concat(dsDimension).concat("_").concat(coreN).concat("_").concat(method).concat("/").concat(query).concat("/logs/");
+      String path = resultsPath.concat("/").concat(iD).concat("_").concat(dsDimension).concat("_").concat(coreN).concat("_").concat(memory).concat("/").concat(query).concat("/logs/");
 
       String luaFileName = getFirstFile(getFirstFolder(path));
 
@@ -639,13 +679,13 @@ public class Utilities {
     * @param resultsPath
     * @param nNodes
     * @param nCores
+    * @param memory
     * @param dataset
-    * @param method
     * @param appId
     * @return A (possibly null) string of type "<nNodes> <nCores>". If the correct folder is found, then the two values will correspond to the parameters. A null string is returned if the results folder has not been found.
     */
-   public String findBestMatch(String resultsPath, String nNodes, String nCores, String dataset, String method, String appId) {
-      String path = resultsPath + "/" + nNodes + "_" + nCores + "_" + dataset + "_" + method +"/" + appId;
+   public String findBestMatch(String resultsPath, String nNodes, String nCores, String memory, String dataset, String appId) {
+      String path = resultsPath + "/" + nNodes + "_" + nCores + "_" + memory + "_" + dataset +"/" + appId;
       File f = new File(path);
       if (!f.exists())
       {
@@ -663,7 +703,7 @@ public class Utilities {
             System.out.println("Fatal error: no sub-directories have been found in " + resultsPath);
             return null;
          }
-         String reply = bestMatch(directories, nNodes, nCores, dataset, method, appId);
+         String reply = bestMatch(directories, nNodes, nCores, memory, dataset, appId);
 
          return reply;
       }
@@ -684,7 +724,8 @@ public class Utilities {
     */
 
    public ResultSet lookupDagsimStageEndTime(Connection connection, String dbName, String appId, String nCores, String stage, String dataset) throws SQLException {
-      String query = "SELECT val FROM " + dbName + ".PREDICTOR_CACHE_TABLE WHERE is_residual = FALSE AND application_id = '" + appId + "' AND num_cores = " + nCores + " AND stage='" + stage + "' AND dataset_size=" + dataset;
+      String query = "SELECT val FROM " + dbName + ".PREDICTOR_CACHE_TABLE WHERE is_residual = FALSE AND application_id = '" + appId + "' AND num_cores = " + nCores + 
+    		  " AND stage='" + stage + "' AND dataset_size=" + dataset;
 
       ResultSet results = query(dbName, connection, query);
       return results;

@@ -1,27 +1,36 @@
+/*
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+*/
+
 package com.bigsea.rest;
 
-
-
 import javax.ws.rs.GET;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.io.FileFilter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.io.File;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
 
 
 /*
@@ -31,12 +40,9 @@ import java.util.concurrent.Future;
 public class Ws extends Utilities {
    // Executor service is needed to queue the calls to OPT_IC
    static final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-
    /* 
     *                  DAGSIM (normal parameters number)
     */
-
    @GET
    @Path("/dagsim/{value1}/{value2}/{value3}/{value4}/{value5}")
    @Produces(MediaType.TEXT_HTML)
@@ -48,18 +54,23 @@ public class Ws extends Utilities {
          @PathParam("value5")  String appId
          ) {
 
-      String msg = "", dagsimPath, resultsPath;
-      dagsimPath = readWsConfig("DAGSIM_HOME");
+	   String msg;
+	   
+	  /* Read dagSim location and logs folder from $HOME/wsi_config.xml */
+      String resultsPath = readWsConfig("RESULTS_HOME");
+      String dagsimPath = readWsConfig("DAGSIM_HOME");
 
-      resultsPath = readWsConfig("RESULTS_HOME");
-
+      /* Check that the variables have been initialized or raise exception */
+      checkConfigurationParameter(resultsPath, "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ");
+      checkConfigurationParameter(dagsimPath,  "Fatal error: RESULTS_HOME not defined in wsi_config.xml ");
+      
+      /* Build the folder path */
       String path = resultsPath + "/" + nNodes + "_" + nCores + "_" + ramGB + "_" + datasetSize +"/" + appId;
-
-
-      if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ";
-      if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in wsi_config.xml ";
-
+      
+      /* Find the folder */
       File f = new File(path);
+      
+      /* If the folder doesn't exist, find the closest match among all the folders available */
       if (!f.exists())
       {
          // Get the list of all the folders
@@ -72,17 +83,18 @@ public class Ws extends Utilities {
             }
          });
 
-         if (directories == null)
-         {
-            System.out.println("Fatal error: no sub-directories have been found in " + readWsConfig("RESULTS_HOME"));
-            System.exit(-1);
-         }
+         checkFoldersExistence(directories, "Fatal error: no sub-directories have been found in " + readWsConfig("RESULTS_HOME"));
+        
+         /* Find the closest folder to the input one */
          String reply = bestMatch(directories, nNodes, nCores, ramGB, datasetSize, appId);
 
+         /* Update the number of cores and nodes to the the found folder */
          nNodes = reply.substring(0, reply.indexOf(" "));
          nCores = reply.substring(nNodes.length()+1, reply.length()-1);
 
       }
+      
+      
       String totalNcores = String.valueOf(Integer.valueOf(nCores) * Integer.valueOf(nNodes));
       try {
          Connection connection = readDataBase(
@@ -93,7 +105,8 @@ public class Ws extends Utilities {
                );
          connection.setAutoCommit(false);
          String dbName = readWsConfig("AppsPropDB_dbName");
-         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
+         //ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
+         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", ramGB);
          if (lookup_total_time == null || !lookup_total_time.next()) {
             msg = Start(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNcores, datasetSize);
          }
@@ -120,17 +133,20 @@ public class Ws extends Utilities {
    @Produces(MediaType.TEXT_HTML)
    public Response dagsimExtendedCall(
          @PathParam("value1")  String nNodesnCores,
-         @PathParam("value2")  String ramGB,
-         @PathParam("value3")  String datasetSize,
+         @PathParam("value2")  String datasetSize,
+         @PathParam("value3")  String ramGB,
          @PathParam("value4")  String appId
          ) {
 
-      String msg = "", dagsimPath, resultsPath;
-      dagsimPath = readWsConfig("DAGSIM_HOME");
-      resultsPath = readWsConfig("RESULTS_HOME");
+      String msg = "";
 
-      if (dagsimPath == null) msg = "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ";
-      if (resultsPath == null) msg = "Fatal error: RESULTS_HOME not defined in wsi_cnfig.xml ";
+      /* Read dagSim location and logs folder from $HOME/wsi_config.xml */
+      String resultsPath = readWsConfig("RESULTS_HOME");
+      String dagsimPath = readWsConfig("DAGSIM_HOME");
+
+      /* Check that the variables have been initialized or raise exception */
+      checkConfigurationParameter(resultsPath, "Fatal error: DAGSIM_HOME not defined in wsi_config.xml ");
+      checkConfigurationParameter(dagsimPath,  "Fatal error: RESULTS_HOME not defined in wsi_config.xml ");
 
       // Get the list of all the folders
 
@@ -223,13 +239,13 @@ public class Ws extends Utilities {
 
 
    @GET
-   @Path("/dagsim/{nNodes}/{nCores}/{ramGB}/{datasetSize}/{appSessId}/{stage}/{currentTimeStamp}")
+   @Path("/dagsim/{nNodes}/{nCores}/{datasetSize}/{ramGB}/{appSessId}/{stage}/{currentTimeStamp}")
    @Produces(MediaType.TEXT_PLAIN)
    public Response dagsimCallStages(
          @PathParam("nNodes")  String nNodes,
          @PathParam("nCores")  String nCores,
-         @PathParam("ramGB")  String ramGB,
-         @PathParam("datasetSize")  String datasetSize,
+         @PathParam("ramGB")  String datasetSize,
+         @PathParam("datasetSize")  String ramGB,
          @PathParam("appSessId")  String appSessId,
          @PathParam("stage")  String stage,
          @PathParam("currentTimeStamp") String currentTimeStamp) {
@@ -406,55 +422,7 @@ public class Ws extends Utilities {
          }
 
 
-   /*
-    * 	             STUDENT'S TOOL (REDUCED PARAMETERS)
-    */
-   /*
-      @GET
-      @Path("/resoptR/{value1}/{value2}/{value3}/{value4}/{value5}/{value6}")
-      @Produces(MediaType.TEXT_HTML)
-      public Response ResoptR(
-      @PathParam("value1")  String nNodesnCores, 
-      @PathParam("value2")  String datasetSize,
-      @PathParam("value3")  String method,
-      @PathParam("value4")  String appId,
-      @PathParam("value5")  String logfile,
-      @PathParam("value6")  String deadline) 
-      {
-
-      String msg1;
-      String cmd1;
-      String nCores = "", nNodes = "";
-
-      if (readWsConfig("RESOPT_HOME") == null) msg1 = "Fatal error: RESOPT_HOME not defined in .demo.properties ";
-
-
-   // Get the list of all the folders
-
-   File [] directories = new File(readWsConfig("RESULTS_HOME")).listFiles(new FileFilter() {
-   @Override
-   public boolean accept(File file) 
-   {
-   return file.isDirectory();
-   }
-   });
-
-   String reply = bestMatchProduct(directories, nNodesnCores, datasetSize, method, appId);
-
-   nNodes = reply.substring(0, reply.indexOf(" "));
-   nCores = reply.substring(nNodes.length()+1, reply.length());
-
-
-
-   cmd1 = "cd " + readWsConfig("RESOPT_HOME")+";./script.sh " + nNodes + " " + nCores + " " + datasetSize + " " + method + 
-   " " + appId + " " + logfile + " " + deadline;  
-   msg1 = _run(cmd1);
-
-
-
-   return Response.status(200).entity(msg1).build();
-      }
-      */
+   
 
    /**
     * First check the cache in the database to see if there is a previously computed value of dagsim -s. If no such value is present, then 
