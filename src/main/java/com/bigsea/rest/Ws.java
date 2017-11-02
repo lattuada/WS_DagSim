@@ -157,7 +157,7 @@ public class Ws extends Utilities {
                );
          connection.setAutoCommit(false);
          String dbName = readWsConfig("AppsPropDB_dbName");
-         msg = Start(dagsimPath, BuildLUA(resultsPath, newNodes, newCores, ramGB, datasetSize, appId), connection, dbName, appId, newCores, datasetSize);
+         msg = Start(dagsimPath, BuildLUA(resultsPath, newNodes, newCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNewNcores, datasetSize);
       }
       catch (Exception e) {
          e.printStackTrace();
