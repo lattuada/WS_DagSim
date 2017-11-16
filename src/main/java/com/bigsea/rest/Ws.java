@@ -100,6 +100,7 @@ public class Ws extends Utilities {
          Connection connection = readDataBase(
                readWsConfig("DB_dbName"),
                readWsConfig("DB_IP"),
+               readWsConfig("DB_port"),
                readWsConfig("DB_user"),
                readWsConfig("DB_pass")
                );
@@ -168,6 +169,7 @@ public class Ws extends Utilities {
          Connection connection = readDataBase(
                readWsConfig("DB_dbName"),
                readWsConfig("DB_IP"),
+               readWsConfig("DB_port"),
                readWsConfig("DB_user"),
                readWsConfig("DB_pass")
                );
@@ -209,6 +211,7 @@ public class Ws extends Utilities {
                connection = readDataBase(
                      readWsConfig("DB_dbName"),
                      readWsConfig("DB_IP"),
+                     readWsConfig("DB_port"),
                      readWsConfig("DB_user"),
                      readWsConfig("DB_pass")
                      );
@@ -271,6 +274,7 @@ public class Ws extends Utilities {
             Connection connection = readDataBase(
                   readWsConfig("DB_dbName"),
                   readWsConfig("DB_IP"),
+                  readWsConfig("DB_port"),
                   readWsConfig("DB_user"),
                   readWsConfig("DB_pass")
                   );
@@ -367,6 +371,7 @@ public class Ws extends Utilities {
                connection = readDataBase(
                      readWsConfig("DB_dbName"),
                      readWsConfig("DB_IP"),
+                     readWsConfig("DB_port"),
                      readWsConfig("DB_user"),
                      readWsConfig("DB_pass")
                      );
@@ -637,6 +642,7 @@ class ResoptCallable extends Utilities implements Callable {
          Connection connection = readDataBase(
                readWsConfig("DB_dbName"),
                readWsConfig("DB_IP"),
+               readWsConfig("DB_port"),
                readWsConfig("DB_user"),
                readWsConfig("DB_pass")
                );
