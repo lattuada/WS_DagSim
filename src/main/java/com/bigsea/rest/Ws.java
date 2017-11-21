@@ -107,7 +107,7 @@ public class Ws extends Utilities {
          connection.setAutoCommit(false);
          String dbName = readWsConfig("DB_dbName");
          //ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
-         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", ramGB);
+         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
          if (lookup_total_time == null || !lookup_total_time.next()) {
             msg = Start(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNcores, datasetSize);
          }
