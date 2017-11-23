@@ -98,16 +98,15 @@ public class Ws extends Utilities {
       String totalNcores = String.valueOf(Integer.valueOf(nCores) * Integer.valueOf(nNodes));
       try {
          Connection connection = readDataBase(
-               readWsConfig("DB_dbName"),
-               readWsConfig("DB_IP"),
-               readWsConfig("DB_port"),
-               readWsConfig("DB_user"),
-               readWsConfig("DB_pass")
+               readWsConfig("AppsPropDB_dbName"),
+               readWsConfig("AppsPropDB_IP"),
+               readWsConfig("AppsPropDB_user"),
+               readWsConfig("AppsPropDB_pass")
                );
          connection.setAutoCommit(false);
-         String dbName = readWsConfig("DB_dbName");
+         String dbName = readWsConfig("AppsPropDB_dbName");
          //ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
-         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", datasetSize);
+         ResultSet lookup_total_time = lookupDagsimStageRemainingTime(connection, dbName, appId, totalNcores, "0", ramGB);
          if (lookup_total_time == null || !lookup_total_time.next()) {
             msg = Start(dagsimPath, BuildLUA(resultsPath, nNodes, nCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNcores, datasetSize);
          }
@@ -167,14 +166,13 @@ public class Ws extends Utilities {
       String totalNewNcores = String.valueOf(Integer.valueOf(newCores) * Integer.valueOf(newNodes));
       try {
          Connection connection = readDataBase(
-               readWsConfig("DB_dbName"),
-               readWsConfig("DB_IP"),
-               readWsConfig("DB_port"),
-               readWsConfig("DB_user"),
-               readWsConfig("DB_pass")
+               readWsConfig("AppsPropDB_dbName"),
+               readWsConfig("AppsPropDB_IP"),
+               readWsConfig("AppsPropDB_user"),
+               readWsConfig("AppsPropDB_pass")
                );
          connection.setAutoCommit(false);
-         String dbName = readWsConfig("DB_dbName");
+         String dbName = readWsConfig("AppsPropDB_dbName");
          msg = Start(dagsimPath, BuildLUA(resultsPath, newNodes, newCores, ramGB, datasetSize, appId), connection, dbName, appId, totalNewNcores, datasetSize);
       }
       catch (Exception e) {
@@ -209,11 +207,10 @@ public class Ws extends Utilities {
             try
             {
                connection = readDataBase(
-                     readWsConfig("DB_dbName"),
-                     readWsConfig("DB_IP"),
-                     readWsConfig("DB_port"),
-                     readWsConfig("DB_user"),
-                     readWsConfig("DB_pass")
+                     readWsConfig("AppsPropDB_dbName"),
+                     readWsConfig("AppsPropDB_IP"),
+                     readWsConfig("AppsPropDB_user"),
+                     readWsConfig("AppsPropDB_pass")
                      );
 
                connection.setAutoCommit(false);
@@ -227,7 +224,7 @@ public class Ws extends Utilities {
             }
             catch(Exception e)
             {
-               e.printStackTrace();
+               e.printStackTrace();System.exit(-1);
             }
 
             return Response.status(200).entity(result).build();
@@ -266,17 +263,16 @@ public class Ws extends Utilities {
                .build();
 
          // try connection with database first to retrieve application_id and submission time
-         String dbName = readWsConfig("DB_dbName");
+         String dbName = readWsConfig("AppsPropDB_dbName");
 
          String appId;
          Timestamp submissionTime;
          try {
             Connection connection = readDataBase(
-                  readWsConfig("DB_dbName"),
-                  readWsConfig("DB_IP"),
-                  readWsConfig("DB_port"),
-                  readWsConfig("DB_user"),
-                  readWsConfig("DB_pass")
+                  readWsConfig("AppsPropDB_dbName"),
+                  readWsConfig("AppsPropDB_IP"),
+                  readWsConfig("AppsPropDB_user"),
+                  readWsConfig("AppsPropDB_pass")
                   );
 
             connection.setAutoCommit(false);
@@ -369,16 +365,15 @@ public class Ws extends Utilities {
             Timestamp submissionTime;
             try {
                connection = readDataBase(
-                     readWsConfig("DB_dbName"),
-                     readWsConfig("DB_IP"),
-                     readWsConfig("DB_port"),
-                     readWsConfig("DB_user"),
-                     readWsConfig("DB_pass")
+                     readWsConfig("AppsPropDB_dbName"),
+                     readWsConfig("AppsPropDB_IP"),
+                     readWsConfig("AppsPropDB_user"),
+                     readWsConfig("AppsPropDB_pass")
                      );
 
                connection.setAutoCommit(false);
 
-               String dbName = readWsConfig("DB_dbName");
+               String dbName = readWsConfig("AppsPropDB_dbName");
                appId = retrieveAppId(appSessId, dbName, connection);
                submissionTime = retrieveSubmissionTime(appSessId, dbName, connection);
 
@@ -508,13 +503,13 @@ public class Ws extends Utilities {
     * @return A space-separated string of type "<num_cores_opt> <num_vm_opt>" containing the result of resopt.
     */
    public String callResopt(Connection connection, String appId, String datasetSize, String deadline) {
-      String sqlStatement = "select num_vm_opt, num_cores_opt from " + readWsConfig("DB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
+      String sqlStatement = "select num_vm_opt, num_cores_opt from " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
          "where application_id='" +  appId   + "'" +
          " and dataset_size='" + datasetSize + "'" +
          " and deadline=" + deadline;
 
 
-      ResultSet resultSet =  query(readWsConfig("DB_dbName"), connection, sqlStatement);
+      ResultSet resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
       String result = "";
 
       try {
@@ -528,12 +523,12 @@ public class Ws extends Utilities {
             Future<String> future = executor.submit(new ResoptCallable(appId, datasetSize, deadline));
             /* Find all the record matching app_id, datasetSize */
             /* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
-            sqlStatement = "SELECT * FROM " + readWsConfig("DB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
+            sqlStatement = "SELECT * FROM " + readWsConfig("AppsPropDB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
                "WHERE application_id="+"'" + appId + "'" +
                " AND dataset_size='" + datasetSize + "'"+
                " AND num_cores_opt <> '0' " + "ORDER BY ABS(" + deadline + " - deadline) limit 2";
 
-            resultSet =  query(readWsConfig("DB_dbName"), connection, sqlStatement);
+            resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
 
             int[] num_cores_opt = new int[2];
             int[] num_vm_opt = new int[2];
@@ -557,7 +552,7 @@ public class Ws extends Utilities {
          }
       }
       catch (Exception e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
 
       return result;
@@ -575,7 +570,7 @@ public class Ws extends Utilities {
          connection.commit();
       }
       catch(Exception e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
    }
 
@@ -600,7 +595,7 @@ public class Ws extends Utilities {
          }
       }
       catch (Exception e) {
-
+    	  e.printStackTrace();System.exit(-1);
       }
 
       return ret;
@@ -634,25 +629,24 @@ class ResoptCallable extends Utilities implements Callable {
          String[] splited = msg1.split("\\s+");
          // Save to database only if the returned values are positive.
 
-         String sqlStatement = "insert into " + readWsConfig("DB_dbName") +
+         String sqlStatement = "insert into " + readWsConfig("AppsPropDB_dbName") +
             ".OPTIMIZER_CONFIGURATION_TABLE(application_id, dataset_size, deadline, num_cores_opt, num_vm_opt) values (" +
             "'" + appId + "', '" + datasetSize + "'," + deadline + "," + splited[0] +"," + splited[1] + ")";
 
 
          Connection connection = readDataBase(
-               readWsConfig("DB_dbName"),
-               readWsConfig("DB_IP"),
-               readWsConfig("DB_port"),
-               readWsConfig("DB_user"),
-               readWsConfig("DB_pass")
+               readWsConfig("AppsPropDB_dbName"),
+               readWsConfig("AppsPropDB_IP"),
+               readWsConfig("AppsPropDB_user"),
+               readWsConfig("AppsPropDB_pass")
                );
 
          connection.setAutoCommit(false);
-         insert(readWsConfig("DB_dbName"), connection, sqlStatement);
+         insert(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
          connection.commit();
       }
       catch (Exception e) {
-
+    	 e.printStackTrace();System.exit(-1);
       }
       return msg1;
    }
