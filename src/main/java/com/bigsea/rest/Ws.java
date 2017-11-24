@@ -227,7 +227,7 @@ public class Ws extends Utilities {
             }
             catch(Exception e)
             {
-               e.printStackTrace();
+               e.printStackTrace();System.exit(-1);
             }
 
             return Response.status(200).entity(result).build();
@@ -557,7 +557,7 @@ public class Ws extends Utilities {
          }
       }
       catch (Exception e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
 
       return result;
@@ -575,7 +575,7 @@ public class Ws extends Utilities {
          connection.commit();
       }
       catch(Exception e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
    }
 
@@ -600,7 +600,7 @@ public class Ws extends Utilities {
          }
       }
       catch (Exception e) {
-
+    	  System.exit(-1);
       }
 
       return ret;
@@ -652,7 +652,7 @@ class ResoptCallable extends Utilities implements Callable {
          connection.commit();
       }
       catch (Exception e) {
-
+    	  System.exit(-1);
       }
       return msg1;
    }

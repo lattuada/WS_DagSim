@@ -42,7 +42,7 @@ public class Utilities {
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
       return resultSet;
    }
@@ -147,7 +147,7 @@ public class Utilities {
 
             writer.close();
          } catch (Exception e) 
-         {
+         {System.exit(-1);
          }
       }
 
@@ -168,7 +168,7 @@ public class Utilities {
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
 
    }
@@ -278,9 +278,9 @@ public class Utilities {
             if (key.equals(variable)) return(value);
          }
       } catch (FileNotFoundException e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       } catch (IOException e) {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
 
       return("Error: variable " + variable + " not found in wsi_config.xml file");
@@ -582,7 +582,7 @@ public class Utilities {
       catch(Exception e)
       {
          e.printStackTrace();
-
+         System.exit(-1);
       }
 
       return filename;
@@ -607,11 +607,11 @@ public class Utilities {
       }
       catch(IOException e)
       {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
       catch(InterruptedException e)
       {
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
       return("Error: could not execute command "+cmd);
    }
@@ -634,7 +634,7 @@ public class Utilities {
          out.close();
       } catch (IOException e) {
 
-         e.printStackTrace();
+         e.printStackTrace();System.exit(-1);
       }
 
    }
