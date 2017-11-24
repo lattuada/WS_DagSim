@@ -42,8 +42,7 @@ public class Utilities {
       }
       catch(Exception e)
       {
-         e.printStackTrace();
-         System.exit(-1);
+         e.printStackTrace();System.exit(-1);
       }
       return resultSet;
    }
@@ -96,11 +95,11 @@ public class Utilities {
        * 
        */
 
-      sqlStatement = "SELECT application_id, chi_0, chi_c, phi_mem,vir_mem, phi_core,vir_core FROM " + readWsConfig("AppsPropDB_dbName") +".APPLICATION_PROFILE_TABLE "+
+      sqlStatement = "SELECT application_id, chi_0, chi_c, phi_mem,vir_mem, phi_core,vir_core FROM " + readWsConfig("DB_dbName") +".APPLICATION_PROFILE_TABLE "+
          "WHERE application_id="+"'" + appId + "'";
       try
       {
-         resultSet =  query(readWsConfig("AppsPropDB_dbName"), connection, sqlStatement);
+         resultSet =  query(readWsConfig("DB_dbName"), connection, sqlStatement);
          if (!resultSet.next())
          {
             throw new RuntimeException("Fatal error: SqlStatement " + sqlStatement+" returned 0 rows");
@@ -148,7 +147,7 @@ public class Utilities {
 
             writer.close();
          } catch (Exception e) 
-         {
+         {System.exit(-1);
          }
       }
 
@@ -169,8 +168,7 @@ public class Utilities {
       }
       catch(Exception e)
       {
-         e.printStackTrace();
-         System.exit(-1);
+         e.printStackTrace();System.exit(-1);
       }
 
    }
@@ -188,7 +186,7 @@ public class Utilities {
    }
 
 
-   public Connection readDataBase(String dbName, String Ip, String user, String password			
+   public Connection readDataBase(String dbName, String Ip, String port, String user, String password			
          ) throws Exception 
    {
       Connection connect = null;
@@ -197,7 +195,7 @@ public class Utilities {
          // This will load the MySQL driver, each DB has its own driver
          Class.forName("com.mysql.cj.jdbc.Driver");
          // Setup the connection with the DB
-         String conn_string = "jdbc:mysql://" + Ip +"/" + dbName + "?"
+         String conn_string = "jdbc:mysql://" + Ip + ":" + port + "/" + dbName + "?"
             + "user=" + user + "&password="+ password;
          connect = DriverManager.getConnection(conn_string);             
 
@@ -232,7 +230,7 @@ public class Utilities {
             connect.close();
          }
       } catch (Exception e) {
-    	  System.exit(-1);
+
       }
    }
 
@@ -507,7 +505,7 @@ public class Utilities {
       }
       catch (IOException e)
       {
-         e.printStackTrace();System.exit(-1);
+         e.printStackTrace();
       }
       return(path);
    }
