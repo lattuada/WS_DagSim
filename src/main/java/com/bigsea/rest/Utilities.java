@@ -42,7 +42,7 @@ public class Utilities {
       }
       catch(Exception e)
       {
-         e.printStackTrace();System.exit(-1);
+         e.printStackTrace();//System.exit(-1);
       }
       return resultSet;
    }
@@ -120,7 +120,7 @@ public class Utilities {
       catch(Exception e)
       {
          e.printStackTrace();
-         System.exit(-1);
+         //System.exit(-1);
       }	
 
       BufferedWriter writer = null;
