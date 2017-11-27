@@ -627,7 +627,8 @@ class ResoptCallable extends Utilities implements Callable {
       String msg1 = "0 0";
       try {
          String cmd1 = "cd " + readWsConfig("RESOPT_HOME")+";./script.sh " + 
-            " " + appId + " " + datasetSize + " " + deadline;  
+            " " + appId + " " + datasetSize + " " + deadline;
+         System.out.println("OPT_IC command: " + cmd1); 
          msg1 = _run(cmd1);
 
          /* Write on DB the new solution */
@@ -652,7 +653,8 @@ class ResoptCallable extends Utilities implements Callable {
          connection.commit();
       }
       catch (Exception e) {
-    	  //System.exit(-1);
+    	  e.printStackTrace(); 
+    	  throw new RuntimeException("Error in call of opt_ic"); 
       }
       return msg1;
    }

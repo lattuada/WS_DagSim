@@ -156,21 +156,12 @@ public class Utilities {
 
 
 
-   public void insert(String dbName, Connection connect, String sqlStatement) 
+   public void insert(String dbName, Connection connect, String sqlStatement) throws SQLException 
    {
       System.out.println("Insert query is: " + sqlStatement);
-      try
-      {
-         Statement statement = connect.createStatement();
+      Statement statement = connect.createStatement();
 
-         statement.executeUpdate(sqlStatement);
-
-      }
-      catch(Exception e)
-      {
-         e.printStackTrace();System.exit(-1);
-      }
-
+      statement.executeUpdate(sqlStatement);
    }
 
    /* Temporary solution: avg not interpolation */
@@ -591,6 +582,7 @@ public class Utilities {
    public String _run(String cmd) {    
       try
       {
+         System.out.println("Command is " + cmd);
          final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", cmd);
          pb.redirectErrorStream();
          final Process process = pb.start();
@@ -602,6 +594,10 @@ public class Utilities {
          for (int len; (len = in.read(bytes)) > 0;)
             baos.write(bytes, 0, len);
          process.waitFor();
+         final int exitValue = process.exitValue();
+         if(exitValue != 0) {
+            throw new RuntimeException("Command " + cmd + " exited with value " + exitValue);
+         }
          return baos.toString(); 
 
       }
