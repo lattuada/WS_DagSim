@@ -526,29 +526,44 @@ public class Ws extends Utilities {
          else
          {
             Future<String> future = executor.submit(new ResoptCallable(appId, datasetSize, deadline));
-            /* Find all the record matching app_id, datasetSize */
-            /* select * from OPTIMIZER_CONFIGURATION_TABLE ORDER BY ABS(755000 - deadline) limit 2;*/
-            sqlStatement = "SELECT * FROM " + readWsConfig("DB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE "+
-               "WHERE application_id="+"'" + appId + "'" +
-               " AND dataset_size='" + datasetSize + "'"+
-               " AND num_cores_opt <> '0' " + "ORDER BY ABS(" + deadline + " - deadline) limit 2";
-
-            resultSet =  query(readWsConfig("DB_dbName"), connection, sqlStatement);
 
             int[] num_cores_opt = new int[2];
             int[] num_vm_opt = new int[2];
             double[] deadlines = new double[2];
-            int index = 0;
 
+            String leftSqlStatement = "SELECT * FROM " + readWsConfig("DB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE WHERE application_id="+"'" + appId + "' AND dataset_size='" + datasetSize + "' AND num_cores_opt <> '0' AND deadline < " + deadline  +" ORDER BY (" + deadline + " - deadline) limit 1";
+            String rightSqlStatement = "SELECT * FROM " + readWsConfig("DB_dbName") +".OPTIMIZER_CONFIGURATION_TABLE WHERE application_id="+"'" + appId + "' AND dataset_size='" + datasetSize + "' AND num_cores_opt <> '0' AND deadline > " + deadline + " ORDER BY (deadline - " + deadline + ") limit 1";
 
-            while (resultSet.next())
+            ResultSet leftResultSet =  query(readWsConfig("DB_dbName"), connection, leftSqlStatement);
+            ResultSet rightResultSet =  query(readWsConfig("DB_dbName"), connection, rightSqlStatement);
+
+            ///Interpolation
+            if(leftResultSet != null && leftResultSet.next() && rightResultSet != null && rightResultSet.next())
             {
-               deadlines[index] = resultSet.getDouble("deadline");
-               num_cores_opt[index] = resultSet.getInt("num_cores_opt");
-               num_vm_opt[index] = resultSet.getInt("num_vm_opt");
-               index++;
+               deadlines[0] = leftResultSet.getDouble("deadline");
+               deadlines[1] = rightResultSet.getDouble("deadline");
+               num_cores_opt[0] = leftResultSet.getInt("num_cores_opt");
+               num_cores_opt[1] = rightResultSet.getInt("num_cores_opt");
+               num_vm_opt[0] = leftResultSet.getInt("num_vm_opt");
+               num_vm_opt[1] = rightResultSet.getInt("num_vm_opt");
             }
+            ///Extrapolation
+            else
+            {
+               String doubleSqlStatement = "SELECT * FROM " + readWsConfig("DB_dbName") + ".OPTIMIZER_CONFIGURATION_TABLE WHERE application_id=" + "'" + appId + "' AND dataset_size='" + datasetSize + "' AND num_cores_opt <> '0' ORDER BY ABS(deadline - " + deadline + ") limit 2";
 
+               resultSet =  query(readWsConfig("DB_dbName"), connection, doubleSqlStatement);
+
+               int index = 0;
+               while (resultSet.next())
+               {
+                  deadlines[index] = resultSet.getDouble("deadline");
+                  num_cores_opt[index] = resultSet.getInt("num_cores_opt");
+                  num_vm_opt[index] = resultSet.getInt("num_vm_opt");
+                  index++;
+               }
+            }
+            System.out.println("For deadline " + String.valueOf(deadline) + " interpolation starts from " + String.valueOf(deadlines[0]) + " and " + String.valueOf(deadlines[1]));
 
             int numCores = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_cores_opt));
             int numVM = (int)Math.round(Interpolation(Double.valueOf(deadline), deadlines[0], deadlines[1], num_vm_opt));
